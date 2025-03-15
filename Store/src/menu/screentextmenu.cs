@@ -20,12 +20,14 @@ public static class ScreenTextMenu
 
     public static void OpenMenu(CCSPlayerController player, string title, JsonElement elementData, bool inventory, ScreenMenu? mainMenu = null, ScreenMenu? parentMenu = null)
     {
+        MenuAPI.CloseActiveMenu(player);
+        
         bool isMainMenu = mainMenu == null && parentMenu == null;
         
         ScreenMenu menu = new(title, Instance)
         {
             ParentMenu = parentMenu,
-            IsSubMenu = !isMainMenu,
+            IsSubMenu = parentMenu != null,
             PostSelectAction = CS2ScreenMenuAPI.Enums.PostSelectAction.Nothing,
             MenuType = CS2ScreenMenuAPI.Enums.MenuType.Both
         };
@@ -33,6 +35,7 @@ public static class ScreenTextMenu
         mainMenu ??= menu;
 
         List<JsonProperty> items = Menu.GetElementJsonProperty(elementData);
+        bool hasValidItems = false;
 
         foreach (JsonProperty item in items)
         {
@@ -42,6 +45,7 @@ public static class ScreenTextMenu
             if (item.Value.TryGetProperty("uniqueid", out JsonElement uniqueIdElement))
             {
                 menu.AddItems(player, uniqueIdElement, inventory, mainMenu, menu);
+                hasValidItems = true;
                 continue;
             }
 
@@ -50,7 +54,10 @@ public static class ScreenTextMenu
 
             string categoryName = Menu.GetCategoryName(player, item);
             menu.AddOption(categoryName, (p, o) => OpenMenu(p, categoryName, item.Value, inventory, mainMenu, menu));
+            hasValidItems = true;
         }
+
+        if (!hasValidItems) return;
 
         if (menu.IsSubMenu)
             MenuAPI.OpenSubMenu(Instance, player, menu);
