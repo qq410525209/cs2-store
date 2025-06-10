@@ -27,7 +27,7 @@ public static class PlayerUtils
                 return;
             }
 
-            if (Config.Settings.EnableCS2Fixes && player.TeamNum == (int)CsTeam.Terrorist)
+            if (Config.Settings.EnableCS2Fixes && player.TeamNum == (int)CsTeam.CounterTerrorist)
             {
                 return;
             }
@@ -40,7 +40,7 @@ public static class PlayerUtils
     {
         if (string.IsNullOrEmpty(model)) return;
 
-        if (Config.Settings.EnableCS2Fixes && pawn.TeamNum == (int)CsTeam.Terrorist)
+        if (Config.Settings.EnableCS2Fixes && pawn.TeamNum == (int)CsTeam.CounterTerrorist)
         {
             return;
         }
