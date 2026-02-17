@@ -47,6 +47,7 @@
   "menu_store<no>": "No",
   "menu_store<confirm_item>": "{0} - {1} credits",
   "menu_store<inspect>": "Inspect",
+  "menu_store<insufficient_credits>": "Insufficient credits: {0}/{1}",
 
   "css_credits": "{white}You have {green}{0} {white}credits.",
   "css_givecredits<player>": "{blue}{0} {white}gave {green}{2} credits {white}to {green}{1}{white}.",

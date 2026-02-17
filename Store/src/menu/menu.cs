@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿﻿﻿﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 using CS2MenuManager.API.Class;
 using CS2MenuManager.API.Enum;
@@ -45,10 +45,21 @@ public static class Menu
         }
         else if (!inventory && !item.IsHidden())
         {
-            menu.AddMenuOption(player, (p, o) => SelectPurchase(p, item, int.Parse(item["price"]) > 0, inventory, prevMenu),
-                Item.CanBuy(player, item) ? DisableOption.None : DisableOption.DisableHideNumber,
+            bool canInspect = item["type"] is "playerskin" or "customweapon";
+            
+            if (canInspect)
+            {
+                menu.AddMenuOption(player, (p, o) => DisplayPurchaseMenu(p, item, inventory, prevMenu),
+                    int.Parse(item["price"]) <= 0 ? "menu_store<purchase1>" : "menu_store<purchase>",
+                    Item.GetItemName(player, item), item["price"]);
+            }
+            else
+            {
+                menu.AddMenuOption(player, (p, o) => SelectPurchase(p, item, int.Parse(item["price"]) > 0, inventory, prevMenu),
+                    Item.CanBuy(player, item) ? DisableOption.None : DisableOption.DisableHideNumber,
                 int.Parse(item["price"]) <= 0 ? "menu_store<purchase1>" : "menu_store<purchase>",
                 Item.GetItemName(player, item), item["price"]);
+            }
         }
     }
 
@@ -72,6 +83,40 @@ public static class Menu
             if (Config.Menu.CloseMenuAfterSelect)
                 DisplayStore(player, inventory);
         }
+    }
+
+    private static void DisplayPurchaseMenu(CCSPlayerController player, Dictionary<string, string> item, bool inventory, IMenu prevMenu)
+    {
+        player.ExecuteClientCommand($"play {Config.Menu.MenuPressSoundYes}");
+        
+        BaseMenu menu = CreateMenuByType(Item.GetItemName(player, item));
+        menu.PrevMenu = prevMenu;
+
+        // 添加价格显示
+        menu.AddMenuOption(player, DisableOption.DisableHideNumber, 
+            int.Parse(item["price"]) <= 0 ? "menu_store<purchase1>" : "menu_store<purchase>",
+            Item.GetItemName(player, item), item["price"]);
+
+        // 添加预览选项（如果支持）
+        menu.AddInspectOption(player, item);
+
+        // 添加购买选项
+        menu.AddMenuOption(player, (p, o) =>
+        {
+            SelectPurchase(p, item, int.Parse(item["price"]) > 0, inventory, prevMenu);
+        }, 
+        Item.CanBuy(player, item) ? DisableOption.None : DisableOption.DisableHideNumber,
+        int.Parse(item["price"]) <= 0 ? "menu_store<purchase1>" : "menu_store<purchase>");
+
+        // 显示玩家当前积分
+        int currentCredits = Credits.Get(player);
+        int itemPrice = int.Parse(item["price"]);
+        if (currentCredits < itemPrice)
+        {
+            menu.AddItem(Instance.Localizer.ForPlayer(player, "menu_store<insufficient_credits>", currentCredits, itemPrice), DisableOption.DisableHideNumber);
+        }
+
+        menu.Display(player, 0);
     }
 
     public static void DisplayItemOption(CCSPlayerController player, Dictionary<string, string> item, bool inventory, IMenu? prevMenu)
